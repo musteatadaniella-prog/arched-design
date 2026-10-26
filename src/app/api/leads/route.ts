@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { validateLead } from "@/lib/lead";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function POST(req: Request) {
   let body: unknown;
@@ -18,9 +19,29 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, errors }, { status: 400 });
   }
 
-  // Leads are only logged for now; saving to Supabase and the Telegram
-  // notification are added in the next steps.
-  console.log("[lead]", { kind: lead.kind, name: lead.name, at: new Date().toISOString() });
+  const lang = (body as { lang?: unknown }).lang === "en" ? "en" : "ro";
+
+  try {
+    // status and created_at come from the table defaults ('new', now()).
+    const { error } = await supabaseAdmin()
+      .from("leads")
+      .insert({
+        kind: lead.kind,
+        name: lead.name,
+        phone: lead.phone,
+        email: lead.email || null,
+        project_type: lead.projectType || null,
+        area: lead.area || null,
+        comment: lead.comment || null,
+        meeting_date: lead.kind === "meeting" ? lead.meetingDate : null,
+        meeting_time: lead.kind === "meeting" ? lead.meetingTime : null,
+        lang,
+      });
+    if (error) throw error;
+  } catch (e) {
+    console.error("[lead] save failed:", e instanceof Error ? e.message : e);
+    return NextResponse.json({ ok: false, error: "save_failed" }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true });
 }
