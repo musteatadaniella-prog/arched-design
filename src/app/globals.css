@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #eae3e0; /* Platinum */
+  --surface: #f9f6ee; /* Spring Wood */
+  --white: #ffffff;
+  --line: #d6ccc6;
+  --ink: #142334; /* Dark Gunmetal */
+  --sand: #c9ad98; /* Rodeo Dust */
+  --ink-soft: #46525f;
+  --muted: #8b8480;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-muted: var(--muted);
+  --color-sand: var(--sand);
+  --color-white: var(--white);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-antonio);
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--surface);
+}
+
+/* Faint blueprint grid used behind hero and section headers */
+.bp-grid {
+  background-image:
+    linear-gradient(to right, rgb(20 35 52 / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(20 35 52 / 0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
