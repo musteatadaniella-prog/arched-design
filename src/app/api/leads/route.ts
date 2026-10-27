@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { validateLead } from "@/lib/lead";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { leadMessage, notifyTelegram } from "@/lib/telegram";
 
 export async function POST(req: Request) {
   let body: unknown;
@@ -42,6 +43,14 @@ export async function POST(req: Request) {
     console.error("[lead] save failed:", e instanceof Error ? e.message : e);
     return NextResponse.json({ ok: false, error: "save_failed" }, { status: 500 });
   }
+
+  // Runs after the response is sent, so the visitor never waits on Telegram;
+  // a Telegram outage is logged but the lead is already saved.
+  after(() =>
+    notifyTelegram(leadMessage(lead, lang)).catch((e) =>
+      console.error("[telegram] send failed:", e instanceof Error ? e.name : e),
+    ),
+  );
 
   return NextResponse.json({ ok: true });
 }
