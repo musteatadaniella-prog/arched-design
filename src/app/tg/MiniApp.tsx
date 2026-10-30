@@ -3,6 +3,7 @@
 import Script from "next/script";
 import { useCallback, useRef, useState } from "react";
 import { dicts, type Lang } from "@/content/dict";
+import { CrmView } from "./CrmView";
 
 // The parts of window.Telegram.WebApp this page uses.
 type WebApp = {
@@ -29,7 +30,10 @@ type SentRequest = { id: string; created_at: string; status: string; project_typ
 const copy = {
   ro: {
     hello: "Bună",
-    lead: "Alegeți serviciul de care aveți nevoie și lăsați un număr de telefon. Vă răspundem în maximum o zi lucrătoare.",
+    lead: "Acesta este cabinetul dvs.: aici vedeți cererile trimise și la ce etapă sunt. Pentru o cerere nouă, alegeți serviciul de mai jos.",
+    newRequest: "Cerere nouă",
+    tabCrm: "CRM",
+    tabClient: "Cabinetul meu",
     catalog: "Servicii",
     details: "Detalii",
     phone: "Telefon",
@@ -52,7 +56,10 @@ const copy = {
   },
   en: {
     hello: "Hi",
-    lead: "Pick the service you need and leave a phone number. We reply within one working day.",
+    lead: "This is your account: here you see the requests you sent and the stage each one is at. For a new request, pick a service below.",
+    newRequest: "New request",
+    tabCrm: "CRM",
+    tabClient: "My account",
     catalog: "Services",
     details: "Details",
     phone: "Phone",
@@ -83,6 +90,8 @@ export function MiniApp({ bot }: { bot: string }) {
   const [lang, setLang] = useState<Lang>("ro");
   const [firstName, setFirstName] = useState("");
   const [requests, setRequests] = useState<SentRequest[]>([]);
+  const [staff, setStaff] = useState(false);
+  const [tab, setTab] = useState<"crm" | "client">("client");
 
   const [service, setService] = useState("");
   const [phone, setPhone] = useState("");
@@ -111,7 +120,14 @@ export function MiniApp({ bot }: { bot: string }) {
     if (!res.ok || !data?.ok) throw new Error("load");
     setFirstName(data.firstName);
     setRequests(data.requests);
+    setStaff(data.staff);
+    return data.staff as boolean;
   }, [api]);
+
+  const haptic = useCallback(
+    (ok: boolean) => app.current?.HapticFeedback?.notificationOccurred(ok ? "success" : "error"),
+    [],
+  );
 
   // Runs once telegram-web-app.js has loaded. In a plain browser initData is
   // empty, so nothing is requested from the server.
@@ -128,7 +144,11 @@ export function MiniApp({ bot }: { bot: string }) {
     wa.setHeaderColor?.("#eae3e0");
     wa.setBackgroundColor?.("#eae3e0");
     load()
-      .then(() => setPhase("ready"))
+      .then((isStaff) => {
+        // Staff land on the funnel; clients on their own account.
+        if (isStaff) setTab("crm");
+        setPhase("ready");
+      })
       .catch(() => setPhase("failed"));
   }, [load]);
 
@@ -201,121 +221,165 @@ export function MiniApp({ bot }: { bot: string }) {
           <h1 className="mt-4 break-words font-display text-4xl uppercase">
             {c.hello}, {firstName}!
           </h1>
-          <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">{c.lead}</p>
 
-          {sent ? (
-            <section className="mt-8 border border-line bg-surface p-6">
-              <p className="text-[15px]">{c.sent}</p>
-              <button
-                type="button"
-                onClick={() => setSent(false)}
-                className="mt-5 w-full border border-ink px-5 py-3 font-mono text-xs uppercase tracking-[0.15em]"
-              >
-                {c.again}
-              </button>
-            </section>
-          ) : (
-            <form onSubmit={submit} noValidate className="mt-8">
-              <h2 className="font-mono text-[11px] uppercase tracking-[0.15em] text-ink-soft">{c.catalog}</h2>
-              <div className="mt-3 grid gap-3">
-                {t.services.items.map((s) => (
-                  <section key={s.code} className="border border-line bg-surface p-4">
-                    <h3 className="font-display text-xl uppercase">{s.title}</h3>
-                    <p className="mt-1 text-sm text-ink-soft">{s.text}</p>
-                    <div className="mt-3 grid gap-2">
-                      {s.list.map((item) => {
-                        const on = service === item;
-                        return (
-                          <button
-                            key={item}
-                            type="button"
-                            aria-pressed={on}
-                            onClick={() => pick(item)}
-                            className={`border px-3 py-3 text-left text-[15px] transition-colors ${
-                              on ? "border-ink bg-ink text-surface" : "border-line bg-bg/40"
-                            }`}
-                          >
-                            {item}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </section>
-                ))}
-              </div>
-              {errors.service && (
-                <p role="alert" className="mt-2 text-sm text-[#b4533f]">
-                  {errors.service}
-                </p>
-              )}
-
-              <h2 className="mt-8 font-mono text-[11px] uppercase tracking-[0.15em] text-ink-soft">{c.details}</h2>
-              <div className="mt-3 grid gap-4 border border-line bg-surface p-4">
-                <Field label={c.phone} error={errors.phone}>
-                  <input
-                    type="tel"
-                    inputMode="tel"
-                    autoComplete="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className={input}
-                  />
-                </Field>
-                <Field label={`${c.area} · ${c.optional}`}>
-                  <input inputMode="numeric" value={area} onChange={(e) => setArea(e.target.value)} className={input} />
-                </Field>
-                <Field label={`${c.comment} · ${c.optional}`}>
-                  <textarea
-                    rows={3}
-                    maxLength={2000}
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    className={input}
-                  />
-                </Field>
-              </div>
-
-              {failed && (
-                <p role="alert" className="mt-4 text-sm text-[#b4533f]">
-                  {c.server}
-                </p>
-              )}
-
-              <button
-                type="submit"
-                disabled={sending}
-                className="mt-6 w-full bg-ink px-5 py-4 font-mono text-xs uppercase tracking-[0.15em] text-surface disabled:opacity-60"
-              >
-                {sending ? c.sending : c.send}
-              </button>
-            </form>
+          {staff && (
+            <div className="mt-5 grid grid-cols-2 border border-ink">
+              {(["crm", "client"] as const).map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setTab(k)}
+                  aria-pressed={tab === k}
+                  className={`px-3 py-3 font-mono text-[11px] uppercase tracking-[0.15em] ${
+                    tab === k ? "bg-ink text-surface" : "bg-surface text-ink"
+                  }`}
+                >
+                  {k === "crm" ? c.tabCrm : c.tabClient}
+                </button>
+              ))}
+            </div>
           )}
 
-          <section className="mt-10">
-            <h2 className="font-mono text-[11px] uppercase tracking-[0.15em] text-ink-soft">{c.mine}</h2>
-            {requests.length === 0 ? (
-              <p className="mt-3 text-sm text-muted">{c.none}</p>
-            ) : (
-              <ul className="mt-3 grid gap-2">
-                {requests.map((r) => (
-                  <li key={r.id} className="flex items-start justify-between gap-3 border border-line bg-surface p-4">
-                    <div className="min-w-0">
-                      <p className="break-words text-[15px]">{r.project_type}</p>
-                      <p className="mt-1 font-mono text-[11px] text-muted">
-                        {new Date(r.created_at).toLocaleDateString(lang === "en" ? "en-GB" : "ro-RO")}
-                      </p>
-                    </div>
-                    <span className="shrink-0 border border-line px-2 py-1 font-mono text-[10px] uppercase tracking-[0.1em]">
-                      {c.status[r.status as keyof typeof c.status] ?? r.status}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+          {tab === "crm" ? (
+            <CrmView api={api} haptic={haptic} />
+          ) : (
+            <>
+              <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">{c.lead}</p>
+
+              <section className="mt-8">
+                <h2 className="font-mono text-[11px] uppercase tracking-[0.15em] text-ink-soft">{c.mine}</h2>
+                {requests.length === 0 ? (
+                  <p className="mt-3 text-sm text-muted">{c.none}</p>
+                ) : (
+                  <ul className="mt-3 grid gap-2">
+                    {requests.map((r) => (
+                      <li key={r.id} className="border border-line bg-surface p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="break-words text-[15px]">{r.project_type}</p>
+                            <p className="mt-1 font-mono text-[11px] text-muted">
+                              {new Date(r.created_at).toLocaleDateString(lang === "en" ? "en-GB" : "ro-RO")}
+                            </p>
+                          </div>
+                          <span className="shrink-0 border border-line px-2 py-1 font-mono text-[10px] uppercase tracking-[0.1em]">
+                            {c.status[r.status as keyof typeof c.status] ?? r.status}
+                          </span>
+                        </div>
+                        <Progress status={r.status} />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+
+              <h2 className="mt-10 font-display text-2xl uppercase">{c.newRequest}</h2>
+              {sent ? (
+                <section className="mt-8 border border-line bg-surface p-6">
+                  <p className="text-[15px]">{c.sent}</p>
+                  <button
+                    type="button"
+                    onClick={() => setSent(false)}
+                    className="mt-5 w-full border border-ink px-5 py-3 font-mono text-xs uppercase tracking-[0.15em]"
+                  >
+                    {c.again}
+                  </button>
+                </section>
+              ) : (
+                <form onSubmit={submit} noValidate className="mt-8">
+                  <h2 className="font-mono text-[11px] uppercase tracking-[0.15em] text-ink-soft">{c.catalog}</h2>
+                  <div className="mt-3 grid gap-3">
+                    {t.services.items.map((s) => (
+                      <section key={s.code} className="border border-line bg-surface p-4">
+                        <h3 className="font-display text-xl uppercase">{s.title}</h3>
+                        <p className="mt-1 text-sm text-ink-soft">{s.text}</p>
+                        <div className="mt-3 grid gap-2">
+                          {s.list.map((item) => {
+                            const on = service === item;
+                            return (
+                              <button
+                                key={item}
+                                type="button"
+                                aria-pressed={on}
+                                onClick={() => pick(item)}
+                                className={`border px-3 py-3 text-left text-[15px] transition-colors ${
+                                  on ? "border-ink bg-ink text-surface" : "border-line bg-bg/40"
+                                }`}
+                              >
+                                {item}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </section>
+                    ))}
+                  </div>
+                  {errors.service && (
+                    <p role="alert" className="mt-2 text-sm text-[#b4533f]">
+                      {errors.service}
+                    </p>
+                  )}
+    
+                  <h2 className="mt-8 font-mono text-[11px] uppercase tracking-[0.15em] text-ink-soft">{c.details}</h2>
+                  <div className="mt-3 grid gap-4 border border-line bg-surface p-4">
+                    <Field label={c.phone} error={errors.phone}>
+                      <input
+                        type="tel"
+                        inputMode="tel"
+                        autoComplete="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className={input}
+                      />
+                    </Field>
+                    <Field label={`${c.area} · ${c.optional}`}>
+                      <input inputMode="numeric" value={area} onChange={(e) => setArea(e.target.value)} className={input} />
+                    </Field>
+                    <Field label={`${c.comment} · ${c.optional}`}>
+                      <textarea
+                        rows={3}
+                        maxLength={2000}
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        className={input}
+                      />
+                    </Field>
+                  </div>
+    
+                  {failed && (
+                    <p role="alert" className="mt-4 text-sm text-[#b4533f]">
+                      {c.server}
+                    </p>
+                  )}
+    
+                  <button
+                    type="submit"
+                    disabled={sending}
+                    className="mt-6 w-full bg-ink px-5 py-4 font-mono text-xs uppercase tracking-[0.15em] text-surface disabled:opacity-60"
+                  >
+                    {sending ? c.sending : c.send}
+                  </button>
+                </form>
+              )}
+            </>
+          )}
         </>
       )}
     </main>
+  );
+}
+
+// Where the request is in the funnel: received → in discussion → proposal → in progress.
+const STEPS = ["new", "contacted", "proposal", "paid"];
+
+function Progress({ status }: { status: string }) {
+  if (status === "lost") return null;
+  const at = STEPS.indexOf(status);
+  return (
+    <div className="mt-3 grid grid-cols-4 gap-1" aria-hidden>
+      {STEPS.map((s, i) => (
+        <span key={s} className={`h-1 ${i <= at ? "bg-ink" : "bg-line"}`} />
+      ))}
+    </div>
   );
 }
 

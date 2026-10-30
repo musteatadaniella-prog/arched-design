@@ -53,6 +53,18 @@ export function telegramUserFrom(req: Request): TelegramUser | null {
   return auth.startsWith("tma ") ? verifyInitData(auth.slice(4)) : null;
 }
 
+// Staff who get the CRM in the Mini App: Telegram user ids, comma separated.
+export function isStaff(u: TelegramUser) {
+  const ids = (process.env.TELEGRAM_STAFF_IDS ?? "").split(",").map((s) => s.trim());
+  return ids.includes(String(u.id));
+}
+
+// A verified staff member, or null.
+export function telegramStaffFrom(req: Request): TelegramUser | null {
+  const user = telegramUserFrom(req);
+  return user && isStaff(user) ? user : null;
+}
+
 export function fullName(u: TelegramUser) {
   return [u.first_name, u.last_name].filter(Boolean).join(" ").trim().slice(0, 100);
 }

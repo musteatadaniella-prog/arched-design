@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { fullName, telegramUserFrom } from "@/lib/telegram-webapp";
+import { fullName, isStaff, telegramUserFrom } from "@/lib/telegram-webapp";
 
 // Who opened the Mini App, and the requests they sent before. Only the
 // requests tied to the verified Telegram id are returned.
@@ -20,7 +20,7 @@ export async function GET(req: Request) {
   }
 
   return NextResponse.json(
-    { ok: true, name: fullName(user), firstName: user.first_name, requests: data },
+    { ok: true, name: fullName(user), firstName: user.first_name, staff: isStaff(user), requests: data },
     { headers: { "Cache-Control": "private, no-store" } },
   );
 }
