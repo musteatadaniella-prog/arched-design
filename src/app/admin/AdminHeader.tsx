@@ -12,7 +12,13 @@ export function AdminHeader({ title, email }: { title: string; email?: string })
           <h1 className="font-display text-2xl uppercase sm:text-3xl">{title}</h1>
         </div>
       </Link>
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <Link
+          href="/admin/scan"
+          className="border border-ink px-4 py-2 font-mono text-[11px] uppercase tracking-[0.15em] transition-colors hover:bg-ink hover:text-surface"
+        >
+          Scanează carte de vizită
+        </Link>
         <Link
           href="/admin/leads/new"
           className="bg-ink px-4 py-2 font-mono text-[11px] uppercase tracking-[0.15em] text-surface transition-opacity hover:opacity-85"

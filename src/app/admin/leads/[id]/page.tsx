@@ -31,6 +31,7 @@ type Lead = {
   meeting_date: string | null;
   meeting_time: string | null;
   lang: string | null;
+  document_path?: string | null;
 };
 
 type Step = {
@@ -111,6 +112,18 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
             </Field>
           )}
           {lead.lang && <Field label="Limba">{lead.lang.toUpperCase()}</Field>}
+          {lead.document_path && (
+            <Field label="Document original">
+              <a
+                href={`/admin/leads/${lead.id}/document`}
+                target="_blank"
+                rel="noreferrer"
+                className="underline underline-offset-4 hover:text-ink-soft"
+              >
+                Deschide originalul ↗
+              </a>
+            </Field>
+          )}
         </dl>
 
         {lead.comment && (
