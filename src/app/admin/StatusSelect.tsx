@@ -2,13 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { updateStatus } from "./actions";
-import { STATUSES, STATUS_LABEL, type LeadStatus } from "./statuses";
-
-const tone: Record<LeadStatus, string> = {
-  new: "border-ink bg-ink text-surface",
-  in_progress: "border-sand bg-sand/40 text-ink",
-  closed: "border-line bg-transparent text-muted",
-};
+import { STATUSES, STATUS_LABEL, STATUS_TONE, type LeadStatus } from "./statuses";
 
 export function StatusSelect({ id, status }: { id: string; status: LeadStatus }) {
   const [value, setValue] = useState(status);
@@ -18,7 +12,7 @@ export function StatusSelect({ id, status }: { id: string; status: LeadStatus })
   return (
     <div className="flex items-center gap-2">
       <select
-        aria-label="Status"
+        aria-label="Etapă"
         value={value}
         disabled={pending}
         onChange={(e) => {
@@ -34,7 +28,7 @@ export function StatusSelect({ id, status }: { id: string; status: LeadStatus })
             }
           });
         }}
-        className={`cursor-pointer border px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-[0.12em] outline-none transition-colors disabled:opacity-60 ${tone[value]}`}
+        className={`cursor-pointer border px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-[0.12em] outline-none transition-colors disabled:opacity-60 ${STATUS_TONE[value]}`}
       >
         {STATUSES.map((s) => (
           <option key={s} value={s} className="bg-surface text-ink">

@@ -27,6 +27,7 @@ export async function POST(req: Request) {
     const { error } = await supabaseAdmin()
       .from("leads")
       .insert({
+        source: "site",
         kind: lead.kind,
         name: lead.name,
         phone: lead.phone,
