@@ -4,6 +4,7 @@ import Script from "next/script";
 import { useCallback, useRef, useState } from "react";
 import { dicts, type Lang } from "@/content/dict";
 import { CrmView } from "./CrmView";
+import { DesignView } from "./DesignView";
 
 // The parts of window.Telegram.WebApp this page uses.
 type WebApp = {
@@ -34,6 +35,7 @@ const copy = {
     newRequest: "Cerere nouă",
     tabCrm: "CRM",
     tabClient: "Cabinetul meu",
+    tabDesign: "Vizualizare",
     catalog: "Servicii",
     details: "Detalii",
     phone: "Telefon",
@@ -60,6 +62,7 @@ const copy = {
     newRequest: "New request",
     tabCrm: "CRM",
     tabClient: "My account",
+    tabDesign: "Visualize",
     catalog: "Services",
     details: "Details",
     phone: "Phone",
@@ -83,6 +86,7 @@ const copy = {
 } as const;
 
 type Phase = "loading" | "outside" | "failed" | "ready";
+type Tab = "crm" | "client" | "design";
 
 export function MiniApp({ bot }: { bot: string }) {
   const app = useRef<WebApp | null>(null);
@@ -91,7 +95,7 @@ export function MiniApp({ bot }: { bot: string }) {
   const [firstName, setFirstName] = useState("");
   const [requests, setRequests] = useState<SentRequest[]>([]);
   const [staff, setStaff] = useState(false);
-  const [tab, setTab] = useState<"crm" | "client">("client");
+  const [tab, setTab] = useState<Tab>("client");
 
   const [service, setService] = useState("");
   const [phone, setPhone] = useState("");
@@ -222,26 +226,26 @@ export function MiniApp({ bot }: { bot: string }) {
             {c.hello}, {firstName}!
           </h1>
 
-          {staff && (
-            <div className="mt-5 grid grid-cols-2 border border-ink">
-              {(["crm", "client"] as const).map((k) => (
+          <div className={`mt-5 grid border border-ink ${staff ? "grid-cols-3" : "grid-cols-2"}`}>
+            {(staff ? (["crm", "client", "design"] as const) : (["client", "design"] as const)).map((k) => (
                 <button
                   key={k}
                   type="button"
                   onClick={() => setTab(k)}
                   aria-pressed={tab === k}
-                  className={`px-3 py-3 font-mono text-[11px] uppercase tracking-[0.15em] ${
+                  className={`px-2 py-3 font-mono text-[11px] uppercase tracking-[0.12em] ${
                     tab === k ? "bg-ink text-surface" : "bg-surface text-ink"
                   }`}
                 >
-                  {k === "crm" ? c.tabCrm : c.tabClient}
+                  {{ crm: c.tabCrm, client: c.tabClient, design: c.tabDesign }[k]}
                 </button>
               ))}
-            </div>
-          )}
+          </div>
 
           {tab === "crm" ? (
             <CrmView api={api} haptic={haptic} />
+          ) : tab === "design" ? (
+            <DesignView api={api} haptic={haptic} lang={lang} />
           ) : (
             <>
               <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">{c.lead}</p>

@@ -20,6 +20,12 @@ export function AdminHeader({ title, email }: { title: string; email?: string })
           Scanează carte de vizită
         </Link>
         <Link
+          href="/admin/generate"
+          className="border border-ink px-4 py-2 font-mono text-[11px] uppercase tracking-[0.15em] transition-colors hover:bg-ink hover:text-surface"
+        >
+          Vizualizare AI
+        </Link>
+        <Link
           href="/admin/leads/new"
           className="bg-ink px-4 py-2 font-mono text-[11px] uppercase tracking-[0.15em] text-surface transition-opacity hover:opacity-85"
         >

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import type { CardFields } from "@/lib/business-card";
 import type { LeadErrorKey } from "@/lib/lead";
+import { shrinkImage } from "@/lib/shrink-image";
 import { recognizeCard, saveCard, type SaveState } from "./actions";
 
 const MAX_BYTES = 4 * 1024 * 1024;
@@ -30,25 +31,8 @@ const LABELS: { key: keyof CardFields; label: string; type?: string }[] = [
 ];
 
 // Phone photos are shrunk in the browser: smaller upload, same text for Claude.
-async function prepare(file: File): Promise<File> {
-  if (file.type === "application/pdf") return file;
-  const url = URL.createObjectURL(file);
-  try {
-    const img = new Image();
-    img.src = url;
-    await img.decode();
-    const scale = Math.min(1, MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(img.naturalWidth * scale);
-    canvas.height = Math.round(img.naturalHeight * scale);
-    canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.85));
-    if (!blob) throw new Error("encode");
-    return new File([blob], "card.jpg", { type: "image/jpeg" });
-  } finally {
-    URL.revokeObjectURL(url);
-  }
-}
+const prepare = (file: File) =>
+  file.type === "application/pdf" ? Promise.resolve(file) : shrinkImage(file, MAX_SIDE, "card.jpg");
 
 export default function ScanPage() {
   const [file, setFile] = useState<File | null>(null);
