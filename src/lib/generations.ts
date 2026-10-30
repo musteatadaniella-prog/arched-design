@@ -31,7 +31,7 @@ export type Generation = {
 
 export type GenerateError =
   | { code: "limit"; quota: Quota }
-  | { code: "prompt" | "photo" | "no_key" | "blocked" | "busy" | "failed" };
+  | { code: "prompt" | "photo" | "no_key" | "rejected" | "blocked" | "busy" | "failed"; detail?: string };
 
 
 // Rows that use up the limit: finished ones, plus ones being drawn right now.
@@ -117,7 +117,7 @@ export async function generate(
   const drawn = await drawDesign(prompt, input.style, photo);
   if (!drawn.ok) {
     await drop();
-    return { ok: false, error: { code: drawn.reason } };
+    return { ok: false, error: { code: drawn.reason, detail: drawn.detail } };
   }
 
   const dir = `${owner.kind}/${owner.id}/${row.created_at.slice(0, 7)}`;

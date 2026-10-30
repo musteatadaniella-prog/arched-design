@@ -10,7 +10,8 @@ export type GenerateState = { generation?: Generation; quota?: Quota; error?: st
 const MESSAGE = {
   prompt: "Descrieți dorințele în 3–1000 de caractere.",
   photo: "Fotografia nu poate fi folosită. Încărcați un JPG, PNG sau WEBP de până la 4 MB.",
-  no_key: "Generarea nu este configurată (lipsește OPENAI_API_KEY).",
+  no_key: "Generarea nu este configurată: OPENAI_API_KEY lipsește în Vercel.",
+  rejected: "OpenAI a respins cheia sau contul. Verificați cheia, creditul și limitele în OpenAI.",
   blocked: "Cererea a fost refuzată de filtrul de siguranță. Reformulați descrierea sau folosiți altă fotografie.",
   busy: "Serviciul de generare este ocupat. Încercați din nou peste un minut.",
   failed: "Generarea a eșuat. Încercați din nou.",
@@ -40,5 +41,6 @@ export async function generateDesign(form: FormData): Promise<GenerateState> {
   }
   // The limit message is built on the page, in the admin's local time.
   if (res.error.code === "limit") return { quota: res.error.quota, error: "limit" };
-  return { error: MESSAGE[res.error.code] };
+  const { code, detail } = res.error;
+  return { error: detail ? `${MESSAGE[code]} (OpenAI: ${detail})` : MESSAGE[code] };
 }

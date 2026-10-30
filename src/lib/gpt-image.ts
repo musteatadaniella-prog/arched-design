@@ -23,7 +23,7 @@ const STYLE_PROMPT: Record<Style, string> = {
 
 export type DrawResult =
   | { ok: true; bytes: Uint8Array; type: ImageType }
-  | { ok: false; reason: "no_key" | "blocked" | "busy" | "failed" };
+  | { ok: false; reason: "no_key" | "rejected" | "blocked" | "busy" | "failed"; detail?: string };
 
 function buildPrompt(wishes: string, style: Style, withPhoto: boolean) {
   return [
@@ -77,9 +77,11 @@ export async function drawDesign(
     if (!res.ok) {
       const err = json?.error;
       console.error("[image] OpenAI API error:", res.status, err?.code, err?.message?.slice(0, 300));
+      // What OpenAI said, shown to admins so a key or account problem is visible.
+      const detail = `${res.status} ${err?.code ?? err?.type ?? ""}`.trim();
       if (err?.code === "moderation_blocked") return { ok: false, reason: "blocked" };
-      if (res.status === 429 || res.status >= 500) return { ok: false, reason: "busy" };
-      return { ok: false, reason: res.status === 401 || res.status === 403 ? "no_key" : "failed" };
+      if (res.status === 429 || res.status >= 500) return { ok: false, reason: "busy", detail };
+      return { ok: false, reason: res.status === 401 || res.status === 403 ? "rejected" : "failed", detail };
     }
 
     const data: string | undefined = json?.data?.[0]?.b64_json;

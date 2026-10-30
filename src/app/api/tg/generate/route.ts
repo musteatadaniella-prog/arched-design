@@ -47,7 +47,7 @@ export async function POST(req: Request) {
 
   if (res.ok) return NextResponse.json({ ok: true, item: res.generation, quota: res.quota }, { headers: noStore });
 
-  const status = { limit: 429, prompt: 400, photo: 400, blocked: 422, busy: 503, no_key: 503, failed: 502 }[
+  const status = { limit: 429, prompt: 400, photo: 400, blocked: 422, busy: 503, no_key: 503, rejected: 502, failed: 502 }[
     res.error.code
   ];
   return NextResponse.json({ ok: false, ...res.error }, { status, headers: noStore });
