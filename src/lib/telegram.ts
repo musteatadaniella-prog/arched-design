@@ -6,7 +6,7 @@ import type { LeadInput } from "./lead";
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-export function leadMessage(lead: LeadInput, lang: string) {
+export function leadMessage(lead: LeadInput, lang: string, via = "site") {
   const when = new Intl.DateTimeFormat("ro-RO", {
     timeZone: "Europe/Chisinau",
     dateStyle: "short",
@@ -26,7 +26,7 @@ export function leadMessage(lead: LeadInput, lang: string) {
     lines.push(`<b>Întâlnire:</b> ${lead.meetingDate.split("-").reverse().join(".")} ${esc(lead.meetingTime ?? "")}`);
   }
   if (lead.comment) lines.push("", `<b>Comentariu:</b>`, esc(lead.comment));
-  lines.push("", `<i>${when} · ${lang.toUpperCase()} · status: nouă</i>`);
+  lines.push("", `<i>${when} · ${lang.toUpperCase()} · ${esc(via)} · status: nouă</i>`);
   return lines.join("\n");
 }
 

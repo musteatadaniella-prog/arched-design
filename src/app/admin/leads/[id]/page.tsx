@@ -32,6 +32,8 @@ type Lead = {
   meeting_time: string | null;
   lang: string | null;
   document_path?: string | null;
+  telegram_user_id?: number | null;
+  telegram_username?: string | null;
 };
 
 type Step = {
@@ -112,6 +114,22 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
             </Field>
           )}
           {lead.lang && <Field label="Limba">{lead.lang.toUpperCase()}</Field>}
+          {lead.telegram_user_id && (
+            <Field label="Telegram">
+              {lead.telegram_username ? (
+                <a
+                  href={`https://t.me/${lead.telegram_username}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline-offset-4 hover:underline"
+                >
+                  @{lead.telegram_username}
+                </a>
+              ) : (
+                <>ID {lead.telegram_user_id}</>
+              )}
+            </Field>
+          )}
           {lead.document_path && (
             <Field label="Document original">
               <a
