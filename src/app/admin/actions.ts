@@ -112,3 +112,76 @@ export async function createLead(_prev: NewLeadState, form: FormData): Promise<N
   revalidatePath("/admin");
   redirect(`/admin/leads/${data.id}`);
 }
+
+// ── Contract & payments ───────────────────────────────────────────────
+
+export type MoneyState = { ok?: boolean; error?: string };
+
+const CURRENCIES = ["EUR", "MDL", "USD"] as const;
+
+// Accepts "12 500", "12500,50", "12.500,50" style input; returns null when blank.
+function parseAmount(raw: FormDataEntryValue | null): number | null | "bad" {
+  let s = String(raw ?? "").replace(/[\s ]/g, "");
+  if (!s) return null;
+  if (s.includes(",") && s.includes(".")) s = s.replace(/\./g, "").replace(",", ".");
+  else s = s.replace(",", ".");
+  if (!/^\d{1,10}(\.\d{1,2})?$/.test(s)) return "bad";
+  return Number(s);
+}
+
+export async function saveContract(id: string, _prev: MoneyState, form: FormData): Promise<MoneyState> {
+  const amount = parseAmount(form.get("amount"));
+  if (amount === "bad") return { error: "Suma nu este validă." };
+  const currency = String(form.get("currency") ?? "EUR");
+  if (!(CURRENCIES as readonly string[]).includes(currency)) return { error: "Valută necunoscută." };
+
+  const supabase = await adminClient();
+  if (!supabase) return { error: "Sesiunea a expirat. Intrați din nou." };
+
+  const { error } = await supabase
+    .from("leads")
+    .update({ contract_amount: amount, contract_currency: currency })
+    .eq("id", id);
+  if (error) {
+    console.error("[admin] contract update failed:", error.message);
+    return { error: "Nu am putut salva suma contractului." };
+  }
+  revalidatePath(`/admin/leads/${id}`);
+  return { ok: true };
+}
+
+export async function addPayment(id: string, _prev: MoneyState, form: FormData): Promise<MoneyState> {
+  const amount = parseAmount(form.get("amount"));
+  if (amount === null || amount === "bad" || amount <= 0) return { error: "Introduceți suma primită." };
+  const paidOn = String(form.get("paid_on") ?? "");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(paidOn) || Number.isNaN(Date.parse(paidOn)))
+    return { error: "Alegeți data primirii." };
+  const note = String(form.get("note") ?? "").trim();
+  if (note.length > 300) return { error: "Comentariul e prea lung (max. 300 de caractere)." };
+
+  const supabase = await adminClient();
+  if (!supabase) return { error: "Sesiunea a expirat. Intrați din nou." };
+
+  const { error } = await supabase
+    .from("lead_payments")
+    .insert({ lead_id: id, amount, paid_on: paidOn, note: note || null });
+  if (error) {
+    console.error("[admin] payment insert failed:", error.message);
+    return { error: "Nu am putut salva plata." };
+  }
+  revalidatePath(`/admin/leads/${id}`);
+  return { ok: true };
+}
+
+export async function deletePayment(leadId: string, paymentId: number) {
+  const supabase = await adminClient();
+  if (!supabase) return { ok: false };
+
+  const { error } = await supabase.from("lead_payments").delete().eq("id", paymentId).eq("lead_id", leadId);
+  if (error) {
+    console.error("[admin] payment delete failed:", error.message);
+    return { ok: false };
+  }
+  revalidatePath(`/admin/leads/${leadId}`);
+  return { ok: true };
+}

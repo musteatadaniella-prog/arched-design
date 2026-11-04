@@ -12,6 +12,7 @@ import {
   type LeadStatus,
 } from "../../statuses";
 import { NotesForm } from "./NotesForm";
+import { Payments, type Payment } from "./Payments";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,8 @@ type Lead = {
   document_path?: string | null;
   telegram_user_id?: number | null;
   telegram_username?: string | null;
+  contract_amount?: number | string | null;
+  contract_currency?: string | null;
 };
 
 type Step = {
@@ -57,7 +60,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   if (!UUID.test(id)) notFound();
 
-  const [{ data: lead }, { data: history }] = await Promise.all([
+  const [{ data: lead }, { data: history }, { data: payments }] = await Promise.all([
     supabase.from("leads").select("*").eq("id", id).maybeSingle<Lead>(),
     supabase
       .from("lead_stage_history")
@@ -65,6 +68,13 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
       .eq("lead_id", id)
       .order("changed_at", { ascending: true })
       .returns<Step[]>(),
+    supabase
+      .from("lead_payments")
+      .select("id, amount, paid_on, note, created_by")
+      .eq("lead_id", id)
+      .order("paid_on", { ascending: true })
+      .order("id", { ascending: true })
+      .returns<Payment[]>(),
   ]);
   if (!lead) notFound();
 
@@ -150,6 +160,16 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
             <p className="mt-2 whitespace-pre-line break-words text-sm text-ink-soft">{lead.comment}</p>
           </div>
         )}
+      </section>
+
+      <section className="mt-6 border border-line bg-surface p-5 sm:p-6">
+        <h3 className="font-mono text-[11px] uppercase tracking-[0.15em] text-ink-soft">Contract și plăți</h3>
+        <Payments
+          id={lead.id}
+          amount={lead.contract_amount != null ? Number(lead.contract_amount) : null}
+          currency={lead.contract_currency ?? "EUR"}
+          payments={(payments ?? []).map((p) => ({ ...p, amount: Number(p.amount) }))}
+        />
       </section>
 
       <div className="mt-6 grid gap-6 md:grid-cols-2">
