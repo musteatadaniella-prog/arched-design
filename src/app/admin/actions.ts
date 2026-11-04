@@ -146,7 +146,7 @@ export async function saveContract(id: string, _prev: MoneyState, form: FormData
     console.error("[admin] contract update failed:", error.message);
     return { error: "Nu am putut salva suma contractului." };
   }
-  revalidatePath(`/admin/leads/${id}`);
+  revalidatePath("/admin", "layout");
   return { ok: true };
 }
 
@@ -169,7 +169,7 @@ export async function addPayment(id: string, _prev: MoneyState, form: FormData):
     console.error("[admin] payment insert failed:", error.message);
     return { error: "Nu am putut salva plata." };
   }
-  revalidatePath(`/admin/leads/${id}`);
+  revalidatePath("/admin", "layout");
   return { ok: true };
 }
 
@@ -182,6 +182,6 @@ export async function deletePayment(leadId: string, paymentId: number) {
     console.error("[admin] payment delete failed:", error.message);
     return { ok: false };
   }
-  revalidatePath(`/admin/leads/${leadId}`);
+  revalidatePath("/admin", "layout");
   return { ok: true };
 }

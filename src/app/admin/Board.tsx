@@ -21,7 +21,31 @@ export type BoardCard = {
   name: string;
   phone: string;
   project_type: string | null;
+  contract_amount: number | null;
+  contract_currency: string;
+  paid: number;
 };
+
+const num = (n: number) => new Intl.NumberFormat("ro-RO", { maximumFractionDigits: 2 }).format(n);
+
+// "4 000 / 12 500 EUR" plus a thin progress bar; nothing when there is no money yet.
+function PaidLine({ card: c }: { card: BoardCard }) {
+  if (c.contract_amount == null && c.paid === 0) return null;
+  const pct = c.contract_amount ? Math.min(100, Math.round((c.paid / c.contract_amount) * 100)) : 0;
+  return (
+    <div className="mt-2">
+      <p className="font-mono text-[11px] text-ink-soft">
+        Achitat {num(c.paid)}
+        {c.contract_amount != null && <> / {num(c.contract_amount)}</>} {c.contract_currency}
+      </p>
+      {c.contract_amount ? (
+        <div className="mt-1 h-1 w-full bg-line" aria-hidden>
+          <div className="h-full bg-ink" style={{ width: `${pct}%` }} />
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 // Kanban board: drag a card to another column, or use the stage picker on the
 // card (works on phones, where drag and drop does not).
@@ -113,6 +137,7 @@ export function Board({ leads }: { leads: BoardCard[] }) {
                     </Link>
                     <p className="mt-1 text-sm text-ink-soft">{c.phone}</p>
                     {c.project_type && <p className="mt-0.5 text-xs text-muted">{c.project_type}</p>}
+                    <PaidLine card={c} />
                     <select
                       aria-label={`Etapa pentru ${c.name}`}
                       value={c.status}
