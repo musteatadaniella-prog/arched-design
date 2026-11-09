@@ -1,4 +1,5 @@
-// Funnel stages and lead sources. Must match the checks in supabase/crm.sql.
+// Funnel stages and lead sources. Must match the checks in supabase/crm.sql
+// (the 'voice' source: supabase/voice.sql).
 
 export const STATUSES = ["new", "contacted", "proposal", "paid", "lost"] as const;
 export type LeadStatus = (typeof STATUSES)[number];
@@ -23,7 +24,7 @@ export function isStatus(v: unknown): v is LeadStatus {
   return typeof v === "string" && (STATUSES as readonly string[]).includes(v);
 }
 
-export const SOURCES = ["site", "manual", "telegram", "business_card"] as const;
+export const SOURCES = ["site", "manual", "telegram", "business_card", "voice"] as const;
 export type LeadSource = (typeof SOURCES)[number];
 
 export const SOURCE_LABEL: Record<LeadSource, string> = {
@@ -31,6 +32,7 @@ export const SOURCE_LABEL: Record<LeadSource, string> = {
   manual: "Manual",
   telegram: "Telegram",
   business_card: "Carte de vizită",
+  voice: "Voce",
 };
 
 export const dateFmt = new Intl.DateTimeFormat("ro-RO", {

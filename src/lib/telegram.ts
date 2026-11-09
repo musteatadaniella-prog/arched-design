@@ -30,6 +30,26 @@ export function leadMessage(lead: LeadInput, lang: string, via = "site") {
   return lines.join("\n");
 }
 
+// A request left by the voice agent on the site: who called and what they asked.
+export function voiceLeadMessage(v: { name: string; phone: string; summary: string; lang: string }) {
+  const when = new Intl.DateTimeFormat("ro-RO", {
+    timeZone: "Europe/Chisinau",
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date());
+  return [
+    "<b>🎙️ Cerere de la agentul vocal</b>",
+    "",
+    `<b>Nume:</b> ${esc(v.name)}`,
+    `<b>Telefon:</b> ${esc(v.phone)}`,
+    "",
+    "<b>Rezumatul discuției:</b>",
+    esc(v.summary),
+    "",
+    `<i>${when} · ${v.lang.toUpperCase()} · voce · status: nouă</i>`,
+  ].join("\n");
+}
+
 export async function notifyTelegram(text: string) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
