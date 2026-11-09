@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { isStatus } from "@/app/admin/statuses";
+import { deliverAutoInvoices } from "@/lib/invoices";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { fullName, telegramStaffFrom } from "@/lib/telegram-webapp";
 
@@ -59,6 +60,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
   if (!found) return notFound();
 
+  if (body.status === "proposal") after(() => deliverAutoInvoices(id));
   revalidatePath("/admin", "layout");
   return NextResponse.json({ ok: true });
 }

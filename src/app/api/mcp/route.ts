@@ -1,7 +1,8 @@
 import { timingSafeEqual } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { STATUSES, STATUS_LABEL, SOURCE_LABEL, isStatus, type LeadSource, type LeadStatus } from "@/app/admin/statuses";
+import { deliverAutoInvoices } from "@/lib/invoices";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 // MCP server for the CRM (Streamable HTTP, stateless, JSON responses).
@@ -255,6 +256,8 @@ async function callTool(name: string, a: Json): Promise<string> {
     const { data: found, error } = await db.rpc("set_lead_stage", { p_id: lead.id, p_status: st, p_actor: ACTOR });
     if (error) throw new Error(error.message);
     if (!found) throw new ToolError("Clientul nu mai există.");
+    const leadId = lead.id;
+    if (st === "proposal") after(() => deliverAutoInvoices(leadId));
     revalidatePath("/admin", "layout");
     return `Gata: ${lead.name} mutat din „${label(lead.status)}” în „${STATUS_LABEL[st]}”. În istoricul cardului apare cu autorul «${ACTOR}». (id ${lead.id})`;
   }

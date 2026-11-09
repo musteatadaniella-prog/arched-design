@@ -13,6 +13,8 @@ import {
 } from "../../statuses";
 import { NotesForm } from "./NotesForm";
 import { Payments, type Payment } from "./Payments";
+import { Invoices, type Invoice } from "./Invoices";
+import { INVOICE_DUE_DAYS } from "@/lib/company";
 
 export const dynamic = "force-dynamic";
 
@@ -60,7 +62,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   if (!UUID.test(id)) notFound();
 
-  const [{ data: lead }, { data: history }, { data: payments }] = await Promise.all([
+  const [{ data: lead }, { data: history }, { data: payments }, { data: invoices }] = await Promise.all([
     supabase.from("leads").select("*").eq("id", id).maybeSingle<Lead>(),
     supabase
       .from("lead_stage_history")
@@ -75,8 +77,17 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
       .order("paid_on", { ascending: true })
       .order("id", { ascending: true })
       .returns<Payment[]>(),
+    supabase
+      .from("invoices")
+      .select("id, number, issued_on, due_on, currency, total, status, paid_at, auto_stage, sent_at, sent_via, send_error")
+      .eq("lead_id", id)
+      .order("created_at", { ascending: false })
+      .returns<Invoice[]>(),
   ]);
   if (!lead) notFound();
+
+  const paidSoFar = (payments ?? []).reduce((s, p) => s + Number(p.amount), 0);
+  const contract = lead.contract_amount != null ? Number(lead.contract_amount) : null;
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-8 sm:px-8 sm:py-12">
@@ -169,6 +180,19 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
           amount={lead.contract_amount != null ? Number(lead.contract_amount) : null}
           currency={lead.contract_currency ?? "EUR"}
           payments={(payments ?? []).map((p) => ({ ...p, amount: Number(p.amount) }))}
+        />
+      </section>
+
+      <section className="mt-6 border border-line bg-surface p-5 sm:p-6">
+        <h3 className="font-mono text-[11px] uppercase tracking-[0.15em] text-ink-soft">Facturi</h3>
+        <Invoices
+          leadId={lead.id}
+          invoices={(invoices ?? []).map((i) => ({ ...i, total: Number(i.total) }))}
+          defaultTitle={`Servicii de proiectare${lead.project_type ? ` — ${lead.project_type}` : ""}`}
+          defaultPrice={contract != null ? Math.round((contract - paidSoFar) * 100) / 100 : null}
+          currency={lead.contract_currency ?? "EUR"}
+          hasTelegram={Boolean(lead.telegram_user_id)}
+          dueDays={INVOICE_DUE_DAYS}
         />
       </section>
 

@@ -2,6 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
+import { INVOICE_DUE_DAYS } from "@/lib/company";
+import { deliverAutoInvoices, sendInvoice } from "@/lib/invoices";
 import { validateLead, type LeadErrors } from "@/lib/lead";
 import { supabaseServer } from "@/lib/supabase-server";
 import { STATUSES, type LeadStatus } from "./statuses";
@@ -48,6 +51,9 @@ export async function updateStatus(id: string, status: LeadStatus) {
     console.error("[admin] status update failed:", error.message);
     return { ok: false };
   }
+  // Moving to "Ofertă trimisă" may have issued an invoice (database trigger);
+  // send it to the client after the response.
+  if (status === "proposal") after(() => deliverAutoInvoices(id));
   revalidatePath("/admin", "layout");
   return { ok: true };
 }
@@ -180,6 +186,76 @@ export async function deletePayment(leadId: string, paymentId: number) {
   const { error } = await supabase.from("lead_payments").delete().eq("id", paymentId).eq("lead_id", leadId);
   if (error) {
     console.error("[admin] payment delete failed:", error.message);
+    return { ok: false };
+  }
+  revalidatePath("/admin", "layout");
+  return { ok: true };
+}
+
+// ── Invoices ──────────────────────────────────────────────────────────
+
+export type InvoiceState = { ok?: boolean; error?: string; message?: string };
+
+const sendFailed = (e: unknown) => ({ ok: false as const, error: e instanceof Error ? e.message : "eroare" });
+
+export async function createInvoice(leadId: string, _prev: InvoiceState, form: FormData): Promise<InvoiceState> {
+  const titles = form.getAll("title").map((v) => String(v).trim());
+  const qtys = form.getAll("qty");
+  const prices = form.getAll("price");
+  const items: { title: string; qty: number; price: number }[] = [];
+  for (let i = 0; i < titles.length; i++) {
+    const qty = parseAmount(qtys[i] ?? null);
+    const price = parseAmount(prices[i] ?? null);
+    if (!titles[i] && qty === null && price === null) continue; // empty row
+    if (!titles[i]) return { error: `Rândul ${i + 1}: scrieți denumirea.` };
+    if (titles[i].length > 200) return { error: `Rândul ${i + 1}: denumirea e prea lungă.` };
+    if (qty === null || qty === "bad" || qty <= 0) return { error: `Rândul ${i + 1}: cantitatea nu este validă.` };
+    if (price === null || price === "bad") return { error: `Rândul ${i + 1}: prețul nu este valid.` };
+    items.push({ title: titles[i], qty, price });
+  }
+  if (items.length === 0) return { error: "Adăugați cel puțin o poziție." };
+  if (items.length > 20) return { error: "Maximum 20 de poziții." };
+  const dueDays = Number(form.get("due_days") ?? INVOICE_DUE_DAYS);
+  if (!Number.isInteger(dueDays) || dueDays < 0 || dueDays > 365) return { error: "Termenul de plată nu este valid." };
+
+  const supabase = await adminClient();
+  if (!supabase) return { error: "Sesiunea a expirat. Intrați din nou." };
+
+  const { data: id, error } = await supabase.rpc("create_invoice", {
+    p_lead: leadId,
+    p_items: items,
+    p_due_days: dueDays,
+  });
+  if (error || typeof id !== "number") {
+    console.error("[admin] invoice create failed:", error?.message);
+    return { error: "Nu am putut emite factura." };
+  }
+
+  let message = "Factura a fost emisă.";
+  if (form.get("send") === "on") {
+    const sent = await sendInvoice(id).catch(sendFailed);
+    message = sent.ok
+      ? "Factura a fost emisă și trimisă clientului în Telegram."
+      : `Factura a fost emisă, dar nu s-a trimis: ${sent.error}`;
+  }
+  revalidatePath(`/admin/leads/${leadId}`);
+  return { ok: true, message };
+}
+
+export async function resendInvoice(leadId: string, invoiceId: number): Promise<{ ok: boolean; error?: string }> {
+  if (!(await adminClient())) return { ok: false, error: "Sesiunea a expirat." };
+  const res = await sendInvoice(invoiceId).catch(sendFailed);
+  revalidatePath(`/admin/leads/${leadId}`);
+  return res.ok ? { ok: true } : { ok: false, error: res.error };
+}
+
+// Marks the invoice paid, records the payment and moves the card to "Achitat".
+export async function markInvoicePaid(leadId: string, invoiceId: number): Promise<{ ok: boolean }> {
+  const supabase = await adminClient();
+  if (!supabase) return { ok: false };
+  const { data, error } = await supabase.rpc("mark_invoice_paid", { p_id: invoiceId });
+  if (error || !data) {
+    console.error("[admin] mark paid failed:", error?.message);
     return { ok: false };
   }
   revalidatePath("/admin", "layout");

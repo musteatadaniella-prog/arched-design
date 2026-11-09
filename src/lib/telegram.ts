@@ -50,3 +50,37 @@ export async function notifyTelegram(text: string) {
     console.error("[telegram] send failed:", res.status, body?.description ?? "");
   }
 }
+
+// Sends a file (e.g. an invoice PDF) to a Telegram chat. The client must have
+// pressed Start in the bot once (anyone who used the Mini App has).
+export async function sendTelegramDocument(
+  chatId: number | string,
+  file: Uint8Array,
+  filename: string,
+  caption: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) return { ok: false, error: "TELEGRAM_BOT_TOKEN nu este setat" };
+
+  const form = new FormData();
+  form.append("chat_id", String(chatId));
+  form.append("caption", caption);
+  form.append("parse_mode", "HTML");
+  form.append("document", new Blob([file as BlobPart], { type: "application/pdf" }), filename);
+
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendDocument`, {
+      method: "POST",
+      body: form,
+      signal: AbortSignal.timeout(15000),
+    });
+    if (res.ok) return { ok: true };
+    // Only Telegram's description, never the URL (it contains the token).
+    const body = (await res.json().catch(() => null)) as { description?: string } | null;
+    return { ok: false, error: body?.description ?? `HTTP ${res.status}` };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.name : "network error" };
+  }
+}
+
+export const escapeHtml = esc;
