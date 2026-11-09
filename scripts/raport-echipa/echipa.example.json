@@ -1,0 +1,290 @@
+{
+  "departament": "Departamentul tehnic MD",
+  "fusOrar": "Europe/Chisinau",
+  "normaOre": 8,
+  "minZileClasament": 10,
+  "calendarGrup": "grup@exemplu.md",
+  "membri": [
+    {
+      "id": "adrian",
+      "nume": "Adrian",
+      "calendar": "persoana1@exemplu.md",
+      "culoare": "#f6e0a3"
+    },
+    {
+      "id": "daniela",
+      "nume": "Daniela",
+      "calendar": "persoana2@exemplu.md",
+      "culoare": "#f4bcd2",
+      "detaliu": [
+        {
+          "nume": "Team Lead",
+          "cuvinte": [
+            "team lead",
+            "teamlead",
+            "business plan",
+            "bp ",
+            "fisa postului",
+            "bonus",
+            "feedback",
+            "hr"
+          ]
+        },
+        {
+          "nume": "Management proiecte",
+          "cuvinte": [
+            "managment",
+            "management"
+          ]
+        },
+        {
+          "nume": "Coordonare echipă",
+          "cuvinte": [
+            "coordonare",
+            "echipa",
+            "команд"
+          ]
+        },
+        {
+          "nume": "Instruire și studiu",
+          "cuvinte": [
+            "curs",
+            "lectie",
+            "lectii",
+            "examen",
+            "studiu",
+            "instruire",
+            "обучен"
+          ]
+        },
+        {
+          "nume": "Șantier și deplasări",
+          "cuvinte": [
+            "santier",
+            "deplasare",
+            "obiect",
+            "vizita",
+            "объект"
+          ]
+        },
+        {
+          "nume": "Ședințe și discuții",
+          "cuvinte": [
+            "sedint",
+            "meet",
+            "call",
+            "discut",
+            "consult",
+            "встреч",
+            "созвон"
+          ]
+        },
+        {
+          "nume": "Proiectare și verificare",
+          "cuvinte": [
+            "proiect",
+            "verific",
+            "desen",
+            "plan",
+            "проект",
+            "провер"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vlada",
+      "nume": "Vlada",
+      "calendar": "persoana3@exemplu.md",
+      "culoare": "#abc8ee"
+    },
+    {
+      "id": "dragos",
+      "nume": "Dragoș",
+      "calendar": "persoana4@exemplu.md",
+      "culoare": "#f7c9a0"
+    },
+    {
+      "id": "constantin",
+      "nume": "Constantin",
+      "calendar": "persoana5@exemplu.md",
+      "culoare": "#a9dfc2"
+    },
+    {
+      "id": "doina",
+      "nume": "Doina",
+      "calendar": "persoana6@exemplu.md",
+      "culoare": "#d3c3ee"
+    },
+    {
+      "id": "daria",
+      "nume": "Daria",
+      "calendar": "persoana7@exemplu.md",
+      "culoare": "#b7e3e1"
+    },
+    {
+      "id": "alexantra",
+      "nume": "Alexantra",
+      "calendar": "persoana8@exemplu.md",
+      "culoare": "#e3c8b0"
+    },
+    {
+      "id": "nicolai-g",
+      "nume": "Nicolai G.",
+      "calendar": "persoana9@exemplu.md",
+      "culoare": "#d7e8a7"
+    },
+    {
+      "id": "niculina",
+      "nume": "Niculina",
+      "calendar": "persoana10@exemplu.md",
+      "culoare": "#ecc3e3"
+    },
+    {
+      "id": "ion",
+      "nume": "Ion",
+      "calendar": "persoana14@exemplu.md",
+      "culoare": "#f0d7a0"
+    },
+    {
+      "id": "natalia",
+      "nume": "Natalia",
+      "sursa": "grup",
+      "potrivire": [
+        "natalia"
+      ],
+      "culoare": "#bdd6cc"
+    },
+    {
+      "id": "svetlana",
+      "nume": "Svetlana",
+      "sursa": "grup",
+      "potrivire": [
+        "svetlana"
+      ],
+      "culoare": "#f1b9a8"
+    },
+    {
+      "id": "nicolai-s",
+      "nume": "Nicolai S.",
+      "sursa": "grup",
+      "potrivire": [
+        "nicolai s"
+      ],
+      "culoare": "#cbcbec"
+    }
+  ],
+  "proiecte": [
+    {
+      "nume": "Solomon Construct",
+      "alias": [
+        "solomon"
+      ]
+    },
+    {
+      "nume": "Petrouzinex",
+      "alias": [
+        "petrouz"
+      ]
+    },
+    {
+      "nume": "Timișoara",
+      "alias": [
+        "timisoara",
+        "тимишоар"
+      ]
+    },
+    {
+      "nume": "9 Parcele DTAC",
+      "alias": [
+        "9 parcele",
+        "dtac"
+      ]
+    },
+    {
+      "nume": "Colina Verde",
+      "alias": [
+        "colina"
+      ]
+    },
+    {
+      "nume": "Casa Moșnița",
+      "alias": [
+        "mosnita"
+      ]
+    },
+    {
+      "nume": "Excel Manufacturing",
+      "alias": [
+        "excel manuf"
+      ]
+    },
+    {
+      "nume": "PE Chișla Nouă",
+      "alias": [
+        "chisla"
+      ]
+    },
+    {
+      "nume": "Element Stil",
+      "alias": [
+        "element stil",
+        "elementstil"
+      ]
+    },
+    {
+      "nume": "Horus",
+      "alias": []
+    },
+    {
+      "nume": "Afisha",
+      "alias": [
+        "афиша"
+      ]
+    },
+    {
+      "nume": "Carvidon",
+      "alias": []
+    },
+    {
+      "nume": "Blocuri Ramiro",
+      "alias": [
+        "ramiro"
+      ]
+    },
+    {
+      "nume": "Rimeș",
+      "alias": [
+        "rimes"
+      ]
+    }
+  ],
+  "sarbatori": [
+    "2026-01-01",
+    "2026-01-07",
+    "2026-01-08",
+    "2026-03-08",
+    "2026-04-12",
+    "2026-04-13",
+    "2026-04-20",
+    "2026-05-01",
+    "2026-05-09",
+    "2026-06-01",
+    "2026-08-27",
+    "2026-08-31",
+    "2026-12-25",
+    "2027-01-01",
+    "2027-01-07",
+    "2027-01-08",
+    "2027-03-08",
+    "2027-05-01",
+    "2027-05-02",
+    "2027-05-03",
+    "2027-05-09",
+    "2027-05-10",
+    "2027-06-01",
+    "2027-08-27",
+    "2027-08-31",
+    "2027-12-25"
+  ]
+}
